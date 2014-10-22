@@ -10,7 +10,12 @@ source '../benri-aws.sh'
 
 
 
-test_expect_failure "no argument" '
+test_expect_failure "_benri_aws_ec2_search_id　no argument" '
 _benri_aws_ec2_search_id
+'
+
+test_expect_success "_benri_aws_find_instances_by_tag" '
+
+_benri_aws_find_instances_by_tag
 '
 test_done

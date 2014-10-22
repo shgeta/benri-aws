@@ -2,14 +2,24 @@
 
 
 
-
-
-
-
 benri_aws(){
   #TODproxy t_benri_aws_*
   echo "not implemented."
 }
+
+#タグからインスタンスを探す
+_benri_aws_find_instances_by_tag(){
+  #$1 key $2 name
+  _tagkey=$1
+  _tagvalue=$2
+  
+  _target="instances"
+  _Target="Instances"
+  _key_name_for_id="InstanceId"
+  aws ec2  "describe-$_target" --query "*[].$_Target[?Tags[?Key==\`$_tagkey\`]][]|[?Tags[?Value==\`$_tagvalue\`]]|[].$_key_name_for_id"  --output text
+}
+
+#依存関係を探すときの助けになるもの。
 _benri_aws_ec2_search_id(){
   if [ $# -eq 0 ]
     then
@@ -29,11 +39,7 @@ _benri_aws_ec2_search_id(){
         echo "$key"
       fi
   done
-  
-  
-  
-  
-  
+
 }
 
 _BENRI_AWS_EC2_SEARCH_TARGETS='describe-account-attributes
