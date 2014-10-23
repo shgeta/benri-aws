@@ -7,6 +7,20 @@ benri_aws(){
   echo "not implemented."
 }
 
+
+#タグからルートテーブルを探す
+_benri_aws_find_route_tables_by_tag(){
+  #$1 key $2 name
+  _tagkey=$1
+  _tagvalue=$2
+  
+  _target="route-tables"
+  _Target="RouteTables"
+  _key_name_for_id="RouteTableId"
+  
+  aws ec2  "describe-$_target" --query "$(_part_of_tag_query $_tagkey $_tagvalue)|[].$_key_name_for_id"  --output text
+}
+
 #タグからインスタンスを探す
 _benri_aws_find_instances_by_tag(){
   #$1 key $2 name
@@ -19,6 +33,17 @@ _benri_aws_find_instances_by_tag(){
   aws ec2  "describe-$_target" --query "*[].$_Target[?Tags[?Key==\`$_tagkey\`]][]|[?Tags[?Value==\`$_tagvalue\`]]|[].$_key_name_for_id"  --output text
 }
 
+_benri_aws_find_route_tables_by_vpcid(){
+#$1 key $2 name
+_vpcid=$1
+
+_target="route-tables"
+_Target="RouteTables"
+_key_name_for_id="RouteTableId"
+
+ aws ec2  "describe-$_target" --query "$_Target[?VpcId==\`$_vpcid\`].$_key_name_for_id" --output text
+ }
+ 
 #依存関係を探すときの助けになるもの。
 _benri_aws_ec2_search_id(){
   if [ $# -eq 0 ]
