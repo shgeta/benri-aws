@@ -44,6 +44,32 @@ _key_name_for_id="RouteTableId"
  aws ec2  "describe-$_target" --query "$_Target[?VpcId==\`$_vpcid\`].$_key_name_for_id" --output text
  }
  
+ _benri_aws_find_something_by_tag(){
+   _tagkey="$1"
+   _tagvalue="$2"
+   
+   #ex. _target="route-tables"
+   _target="$3"
+   #ex. _Target="RouteTables"
+   _Target="$4"
+   #ex. _key_name_for_id="RouteTableId"
+   _key_name_for_id="$5"
+
+    aws ec2  "describe-$_target" --query "*[]|$(_benri_aws_query_builder_get_object_from_list_by_tag $_tagkey $_tagvalue)"  --output json
+ }
+ _benri_aws_find_ids_by_tag(){
+   _tagkey="$1"
+   _tagvalue="$2"
+   
+   #ex. _target="route-tables"
+   _target="$3"
+   #ex. _Target="RouteTables"
+   _Target="$4"
+   #ex. _key_name_for_id="RouteTableId"
+   _key_name_for_id="$5"
+
+aws ec2  "describe-$_target" --query "*[]|$(_benri_aws_query_builder_get_object_from_list_by_tag $_tagkey $_tagvalue)|[].$_key_name_for_id"  --output text
+ }
 #依存関係を探すときの助けになるもの。
 _benri_aws_ec2_search_id(){
   if [ $# -eq 0 ]
@@ -136,3 +162,11 @@ describe-vpn-gateways
 # describe-vpn-connections
 # describe-vpn-gateways
 # '
+
+
+_benri_aws_query_builder_get_object_from_list_by_tag(){
+  #配列の中が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
+  _keyname=$1
+  _value=$2
+  echo "[?Tags[?Key==\`$_keyname\`]][]|[?Tags[?Value==\`$_value\`]]"
+}
