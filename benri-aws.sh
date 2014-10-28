@@ -6,7 +6,17 @@ benri_aws(){
   #TODproxy t_benri_aws_*
   echo "not implemented."
 }
-
+## ex. _benri_aws_set_tags_to 'subnet-1234' 'Key=session,Value=12345'
+_benri_aws_set_tags_to(){
+  if [ $# -lt 2]
+    then
+    echo "ex. _benri_aws_set_tags_to 'subnet-1234' 'Key=session,Value=12345'"
+    return -1
+  fi
+  _target="$1"
+  shift
+    aws ec2 create-tags --resources "$_target" --tags "$@"
+}
 
 #タグからルートテーブルを探す
 _benri_aws_find_route_tables_by_tag(){
@@ -68,7 +78,7 @@ _key_name_for_id="RouteTableId"
    #ex. _key_name_for_id="RouteTableId"
    _key_name_for_id="$5"
 
-aws ec2  "describe-$_target" --query "*[]|$(_benri_aws_query_builder_get_object_from_list_by_tag $_tagkey $_tagvalue)|[].$_key_name_for_id"  --output text
+    aws ec2  "describe-$_target" --query "*[]|$(_benri_aws_query_builder_get_object_from_list_by_tag $_tagkey $_tagvalue)|[].$_key_name_for_id"  --output text
  }
 #依存関係を探すときの助けになるもの。
 _benri_aws_ec2_search_id(){
@@ -165,7 +175,7 @@ describe-vpn-gateways
 
 
 _benri_aws_query_builder_get_object_from_list_by_tag(){
-  #配列の中が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
+  #配列が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
   _keyname=$1
   _value=$2
   echo "[?Tags[?Key==\`$_keyname\`]][]|[?Tags[?Value==\`$_value\`]]"
