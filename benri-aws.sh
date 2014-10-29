@@ -8,7 +8,7 @@ benri_aws(){
 }
 ## ex. _benri_aws_set_tags_to 'subnet-1234' 'Key=session,Value=12345'
 _benri_aws_set_tags_to(){
-  if [ $# -lt 2]
+  if [ $# -lt 2 ]
     then
     echo "ex. _benri_aws_set_tags_to 'subnet-1234' 'Key=session,Value=12345'"
     return -1
@@ -67,7 +67,14 @@ _key_name_for_id="RouteTableId"
 
     aws ec2  "describe-$_target" --query "*[]|$(_benri_aws_query_builder_get_object_from_list_by_tag $_tagkey $_tagvalue)"  --output json
  }
+ #v
  _benri_aws_find_ids_by_tag(){
+   if [ $# -ne 5 ]
+     then
+     echo "_benri_aws_find_ids_by_tag test ttt vpcs Vpcs VpcId"
+     return -1
+   fi
+   
    _tagkey="$1"
    _tagvalue="$2"
    
