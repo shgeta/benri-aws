@@ -181,18 +181,18 @@ _key_name_for_id="RouteTableId"
      echo "ex. _benri_aws_find_ids_by_tag vpc-123456 tagkey tagvalue subnets Subnets SubnetId"
      return -1
    fi
-   
-   _tagkey="$1"
-   _tagvalue="$2"
+   _vpcid="$1"
+   _tagkey="$2"
+   _tagvalue="$3"
    
    #ex. _target="route-tables"
-   _target="$3"
+   _target="$4"
    #ex. _Target="RouteTables"
-   _Target="$4"
+   _Target="$5"
    #ex. _key_name_for_id="RouteTableId"
-   _key_name_for_id="$5"
+   _key_name_for_id="$6"
 
-    aws ec2  "describe-$_target" --query "*[]|$(_benri_aws_query_builder_get_object_from_list_by_tag $_tagkey $_tagvalue)|[].$_key_name_for_id"  --output text
+    aws ec2  "describe-$_target" --query "*[]|"$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$_vpcid")"|$(_benri_aws_query_builder_get_object_from_list_by_tag $_tagkey $_tagvalue)|[].$_key_name_for_id"  --output text
  }
  
 #依存関係を探すときの助けになるもの。
@@ -317,10 +317,18 @@ _benri_aws_query_builder_get_object_from_list_by_tag(){
   _value=$2
   echo "[?Tags[?Key==\`$_keyname\`]][]|[?Tags[?Value==\`$_value\`]]"
 }
+_benri_aws_query_builder_get_object_from_list_by_key_value(){
+  #配列が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
+  _key="$1"
+  _value="$2"
+  _query_str='[?'"$_value"'==`'"$_vpcid"'`]'
+  echo "$_query_str"
+}
 _benri_aws_query_builder_get_object_from_list_by_vpcid(){
   #配列が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
-  _vpcid=$1
-  _query_str='[?VpcId==`'"$_vpcid"'`]'
+  _vpcid="$1"
+  # _query_str='[?VpcId==`'"$_vpcid"'`]'
+  _query_str=$(_benri_aws_query_builder_get_object_from_list_by_key_value "VpcId" "$_vpcid")
   echo "$_query_str"
 }
 #上より1階層深い場所にある場合instanceなど。
