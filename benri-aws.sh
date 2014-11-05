@@ -93,8 +93,7 @@ _benri_aws_find_instances_by_tag () {
 }
 #vpcidからインスタンスを探す
 _benri_aws_find_instances_by_vpcid () {
-  _tagkey=$1
-  _tagvalue=$2
+  _vpcid=$1
   _target="instances"
   _Target="Instances"
   _key_name_for_id="InstanceId"
