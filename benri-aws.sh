@@ -385,7 +385,7 @@ _benri_aws_query_builder_get_object_from_list_by_key_value () {
   #配列が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
   _key="$1"
   _value="$2"
-  _query_str='[?'"$_value"'==`'"$_vpcid"'`]'
+  _query_str='[?'"$_key"'==`'"$_value"'`]'
   echo "$_query_str"
 }
 _benri_aws_query_builder_get_object_from_list_by_vpcid () {
