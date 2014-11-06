@@ -92,14 +92,24 @@ _benri_aws_find_instances_by_tag () {
   aws ec2  "describe-$_target" --query "*[].$_Target[?Tags[?Key==\`$_tagkey\`]][]|[?Tags[?Value==\`$_tagvalue\`]]|[].$_key_name_for_id"  --output text
 }
 #vpcidからインスタンスを探す
-_benri_aws_find_instances_by_vpcid () {
-  _vpcid=$1
-  _target="instances"
-  _Target="Instances"
-  _key_name_for_id="InstanceId"
-  aws ec2  "describe-$_target" --query "*[]|"$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$_vpcid")'|[].'"$_key_name_for_id"  --output text
+# _benri_aws_find_instances_by_vpcid () {
+#   _vpcid="$1"
+#   shift
+#   _other_options="$@"
+#   _target="instances"
+#   _Target="Instances"
+#   _key_name_for_id="InstanceId"
+#   aws ec2  "describe-$_target" --query "*[]|"$(_benri_aws_query_builder_down_one_level)"|"$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$_vpcid")  $_other_options
+# }
+_benri_aws_find_instance_ids_by_vpcid () {
+_vpcid="$1"
+shift
+_other_options="$@"
+_target="instances"
+_Target="Instances"
+_key_name_for_id="InstanceId"
+aws ec2  "describe-$_target" --query "*[]|"$(_benri_aws_query_builder_down_one_level)"|"$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$_vpcid")"|[].$_key_name_for_id"  $_other_options
 }
-
 
 
 # _benri_aws_find_by_vpcid_from_category () {
