@@ -221,7 +221,8 @@ _benri_aws_find_ids_by_vpcid_and_key_value () {
   #ex. _key_name_for_id="RouteTableId"
   _key_name_for_id="$6"
   # '*[]|[?VpcId==`vpc-b913e0dc`]|[?Tags[?Key==`Name`]]|[?Tags[?Value==`humidai test`]]'
-  aws ec2  "describe-$_target" --query "*[]|"$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$_vpcid")"|"$(_benri_aws_query_builder_get_object_from_list_by_key_value "$_key" "$_value")"|[].$_key_name_for_id"   --output text
+  _query="*[]|"$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$_vpcid")"|"$(_benri_aws_query_builder_get_object_from_list_by_key_value "$_key" "$_value")"|[].$_key_name_for_id"
+  aws ec2  "describe-$_target" --query "$_query" --output text
 }
 #v
 _benri_aws_find_ids_by_tag () {
@@ -397,6 +398,9 @@ _benri_aws_query_builder_get_object_from_list_by_key_value () {
   _value="$2"
   _query_str='[?'"$_key"'==`'"$_value"'`]'
   echo "$_query_str"
+}
+_benri_aws_query_builder_get_vpcid_from_list_by_vpcid (){
+  _query_str=$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$1")"|[].VpcId"
 }
 _benri_aws_query_builder_get_object_from_list_by_vpcid () {
   #配列が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
