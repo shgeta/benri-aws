@@ -3,13 +3,48 @@
 
 
 benri_aws () {
-  #TODproxy t_benri_aws_*
+  #TODO proxy t_benri_aws_*
   echo "not implemented."
 }
 _benri_aws_converter_to_snake () {
   echo "$1"|sed -e 's/\([A-Z]\)/-\1/g' -e 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/' -e 's/^-//'
 }
 
+
+_benri_aws_new_session () {
+  session_key="${SESSION_PREFIX}_$(date +"%Y%m%d%H%M%S")"
+  echo "session_key is $session_key"
+  echo "$session_key" >>"session_${session_key}.log"
+}
+_benri_aws_set_tag_created () {
+  #if you set $session_key and $group_key. there are used by tags for session and group.
+  for _target in "$@"
+  do
+    _username=$(whoami)
+    aws ec2 create-tags --resources "$_target" --tags "Key=created_by,Value=$_username"
+    aws ec2 create-tags --resources "$_target" --tags "Key=session,Value=$session_key"
+    aws ec2 create-tags --resources "$_target" --tags "Key=group,Value=$group_key"
+    _date=$(date +"%Y%m%d%H%M%S")
+    aws ec2 create-tags --resources $_target --tags "Key=created_at,Value=$_date"
+    echo "$_target" >>"session_${session_key}.log"
+  done
+}
+
+
+
+_benri_aws_describe_all () {
+  
+  for _key in $_BENRI_AWS_EC2_DESCRIBES_ALL
+  do
+    echo "###################################"
+    echo "$_key"
+    aws ec2 "$_key" "$@"
+    
+  done
+  
+  
+  
+}
 
 #破壊的！作りかけ
 _benri_aws_clear_all_under_vpc () {
@@ -27,6 +62,30 @@ route_table:route_tables:RouteTable:RouteTables
 network-acl:network-acls:NetworkAcl:NetworkAcls
 vpc:vpcs:Vpc:Vpcs
 '
+
+_benri_aws_cleanup_security_group () {
+  #security_groupのぱミッションをきれいにしようとします。失敗する時もありますディペンデンシーなどで。
+  _group_id="$1"
+  echo "clean up "
+  
+  _permission=$(aws ec2 describe-security-groups --output json --query '*[]|[?GroupId==`'$_group_id'`].IpPermissionsEgress|[]')
+  if test -n "$_permission"
+    then
+    aws ec2 revoke-security-group-egress --group-id "$_id" --ip-permissions "$_permission" || return 1
+  fi
+  _permission=$(aws ec2 describe-security-groups --output json --query '*[]|[?GroupId==`'$_group_id'`].IpPermissions|[]')
+  if test -n "$_permission"
+    then
+    aws ec2 revoke-security-group-ingress --group-id "$_id" --ip-permissions "$_permission" || return 1
+  fi
+}
+
+
+
+
+
+
+
 #作りかけ
 _benri_aws_name_to_plural () {
   _target_name="$1"
@@ -270,6 +329,12 @@ _benri_aws_find_ids_by_vpcid_and_tag () {
   aws ec2  "describe-$_target" --query "*[]|"$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$_vpcid")"|$(_benri_aws_query_builder_get_object_from_list_by_tag $_tagkey $_tagvalue)|[].$_key_name_for_id"  --output text
 }
 
+
+
+
+
+
+
 #依存関係を探すときの助けになるもの。
 _benri_aws_ec2_search_id () {
   if [ $# -eq 0 ]
@@ -293,6 +358,14 @@ _benri_aws_ec2_search_id () {
   
 }
 
+
+
+
+
+
+
+
+
 #引数が必要なものは入っていない
 _benri_aws_ec2_describe_all () {
   
@@ -302,6 +375,12 @@ _benri_aws_ec2_describe_all () {
   done
   
 }
+
+
+
+
+
+
 
 ##TODOもれがないか
 _BENRI_AWS_EC2_SEARCH_TARGETS='describe-account-attributes
@@ -340,35 +419,24 @@ describe-conversion-tasks
 describe-customer-gateways
 describe-dhcp-options
 describe-export-tasks
-describe-image-attribute
 describe-images
-describe-instance-attribute
 describe-instance-status
 describe-instances
 describe-internet-gateways
 describe-key-pairs
 describe-network-acls
-describe-network-interface-attribute
 describe-network-interfaces
 describe-placement-groups
 describe-regions
-describe-reserved-instances
-describe-reserved-instances-listings
-describe-reserved-instances-modifications
-describe-reserved-instances-offerings
 describe-route-tables
 describe-security-groups
-describe-snapshot-attribute
 describe-snapshots
-describe-spot-datafeed-subscription
 describe-spot-instance-requests
 describe-spot-price-history
 describe-subnets
 describe-tags
-describe-volume-attribute
 describe-volume-status
 describe-volumes
-describe-vpc-attribute
 describe-vpc-peering-connections
 describe-vpcs
 describe-vpn-connections
