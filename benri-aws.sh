@@ -453,7 +453,6 @@ _benri_aws_query_builder_get_object_by_keyname () {
   _keyname="$1"
   echo "[?$_keyname]"
 }
-
 _benri_aws_query_builder_get_object_from_list_by_tag () {
   #配列が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
   _keyname=$1
@@ -481,4 +480,12 @@ _benri_aws_query_builder_get_object_from_list_by_vpcid () {
 _benri_aws_query_builder_get_object_from_list_by_vpcid_2 () {
   _query_str=''$(_benri_aws_query_builder_down_one_level)'|'$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$@")''
   echo "$_query_str"
+}
+
+#インターフェイスのは考慮しない
+_benri_aws_query_builder_get_instance_ids_by_security_group_name () {
+  _vpcid="$1"
+  _sg_name="$2"
+  _query_str='*[]|'$(_benri_aws_query_builder_down_one_level)'|'$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$_vpcid")'|[?SecurityGroups[?GroupName==`'"$_sg_name"'`]].InstanceId'
+echo "$_query_str"
 }
