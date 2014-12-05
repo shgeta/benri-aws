@@ -512,6 +512,23 @@ _benri_aws_query_builder_filter_by_logical_id () {
 }
 #論理IDでセキュリティーグループid取得 
 _benri_aws_query_builder_get_security_group_id_by_logical_id () {
+  __logical_id="$1"
+  __query_str='*[]|'$(_benri_aws_query_builder_filter_by_tag 'aws:cloudformation:logical-id' $__logical_id)'.GroupId'
+  echo "$__query_str"
+}
+_benri_aws_get_security_group_id_by_logical_id () {
   _logical_id="$1"
-  _query_str='*[]|'$(_benri_aws_query_builder_filter_by_tag 'aws:cloudformation:logical-id' $_logical_id)'.GroupId'
+  _query_str=$(_benri_aws_query_builder_get_security_group_id_by_logical_id "$_logical_id")
+  aws ec2 describe-security-groups --output text --query "$_query_str"
+}
+#論理IDでセキュリティーグループid取得 
+_benri_aws_query_builder_get_security_owner_id_by_logical_id () {
+  __logical_id="$1"
+  __query_str='*[]|'$(_benri_aws_query_builder_filter_by_tag 'aws:cloudformation:logical-id' $_logical_id)'.OwnerId'
+  echo "$__query_str"
+}
+_benri_aws_get_security_owner_id_by_logical_id () {
+  _logical_id="$1"
+  _query_str=$(_benri_aws_query_builder_get_security_owner_id_by_logical_id "$_logical_id")
+  aws ec2 describe-security-groups --output text --query "$_query_str"
 }
