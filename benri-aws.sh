@@ -442,6 +442,12 @@ describe-vpcs
 describe-vpn-connections
 describe-vpn-gateways
 '
+
+
+
+
+#### 部分は今後filterという名前に変えていこうgetはそのまま使える形にしよう！
+
 #１階層下げる
 _benri_aws_query_builder_down_one_level () {
   ##TODO テストまだ
@@ -459,6 +465,7 @@ _benri_aws_query_builder_get_object_from_list_by_tag () {
   _value=$2
   echo "[?Tags[?Key==\`$_keyname\`]][]|[?Tags[?Value==\`$_value\`]]"
 }
+
 _benri_aws_query_builder_get_object_from_list_by_key_value () {
   #配列が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
   _key="$1"
@@ -488,4 +495,23 @@ _benri_aws_query_builder_get_instance_ids_by_security_group_name () {
   _sg_name="$2"
   _query_str='*[]|'$(_benri_aws_query_builder_down_one_level)'|'$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$_vpcid")'|[?SecurityGroups[?GroupName==`'"$_sg_name"'`]].InstanceId'
 echo "$_query_str"
+}
+
+###filters
+
+_benri_aws_query_builder_filter_by_tag () {
+  _benri_aws_query_builder_get_object_from_list_by_tag "$@"
+}
+
+##for cloudformation
+#論理IDで絞り込み
+_benri_aws_query_builder_filter_by_logical_id () {
+  _logical_id="$1"
+  _query_str=''$(_benri_aws_query_builder_filter_by_tag 'aws:cloudformation:logical-id' $_logical_id)
+  echo "$_query_str"
+}
+#論理IDでセキュリティーグループid取得 
+_benri_aws_query_builder_get_security_group_id_by_logical_id () {
+  _logical_id="$1"
+  _query_str='*[]|'$(_benri_aws_query_builder_filter_by_tag 'aws:cloudformation:logical-id' $_logical_id)'.GroupId'
 }
