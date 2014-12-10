@@ -519,7 +519,13 @@ _benri_aws_query_builder_get_security_group_id_by_logical_id () {
 _benri_aws_get_security_group_id_by_logical_id () {
   _logical_id="$1"
   _query_str=$(_benri_aws_query_builder_get_security_group_id_by_logical_id "$_logical_id")
-  aws ec2 describe-security-groups --output text --query "$_query_str"
+  if test -n "$KANAMEI_AWS_PROFILE_NAME"
+    then
+    __profile=" --profile ${KANAMEI_AWS_PROFILE_NAME}"
+  else
+    __profile=''
+  fi
+  aws ec2 describe-security-groups --output text --query "$_query_str" $__profile
 }
 #論理IDでセキュリティーグループid取得 
 _benri_aws_query_builder_get_security_owner_id_by_logical_id () {
@@ -530,5 +536,11 @@ _benri_aws_query_builder_get_security_owner_id_by_logical_id () {
 _benri_aws_get_security_owner_id_by_logical_id () {
   _logical_id="$1"
   _query_str=$(_benri_aws_query_builder_get_security_owner_id_by_logical_id "$_logical_id")
-  aws ec2 describe-security-groups --output text --query "$_query_str"
+  if test -n "$KANAMEI_AWS_PROFILE_NAME"
+    then
+    __profile=" --profile ${KANAMEI_AWS_PROFILE_NAME}"
+  else
+    __profile=''
+  fi
+  aws ec2 describe-security-groups --output text --query "$_query_str" $__profile
 }
