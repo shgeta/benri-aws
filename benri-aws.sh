@@ -16,6 +16,7 @@ _benri_aws_new_session () {
   echo "session_key is $session_key"
   echo "$session_key" >>"session_${session_key}.log"
 }
+
 _benri_aws_set_tag_created () {
   #if you set $session_key and $group_key. there are used by tags for session and group.
   for _target in "$@"
@@ -30,8 +31,6 @@ _benri_aws_set_tag_created () {
   done
 }
 
-
-
 _benri_aws_describe_all () {
   
   for _key in $_BENRI_AWS_EC2_DESCRIBES_ALL
@@ -41,8 +40,6 @@ _benri_aws_describe_all () {
     aws ec2 "$_key" "$@"
     
   done
-  
-  
   
 }
 
@@ -447,6 +444,22 @@ describe-vpn-gateways
 
 
 #### 部分は今後filterという名前に変えていこうgetはそのまま使える形にしよう！
+_benri_aws_query_builder_filter_base () {
+  if test -n "$BENRI_AWS_TARGET_VPC_ID"
+    then
+      _query_str=''$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$BENRI_AWS_TARGET_VPC_ID")'|'
+  fi
+  echo $_query_str
+}
+_benri_aws_query_builder_filter_by_tag () {
+  _keyname=$1
+  _value=$2
+  _query_str=$(_benri_aws_query_builder_filter_base)"[?Tags[?Key==\`$_keyname\`]][]|[?Tags[?Value==\`$_value\`]]"
+  echo $_query_str
+}
+
+
+
 
 #１階層下げる
 _benri_aws_query_builder_down_one_level () {
@@ -459,11 +472,12 @@ _benri_aws_query_builder_get_object_by_keyname () {
   _keyname="$1"
   echo "[?$_keyname]"
 }
+
+
 _benri_aws_query_builder_get_object_from_list_by_tag () {
   #配列が来ている仮定 たいていの場合このまえに *[]| などをつけるとよいかも
-  _keyname=$1
-  _value=$2
-  echo "[?Tags[?Key==\`$_keyname\`]][]|[?Tags[?Value==\`$_value\`]]"
+_query_str=$(_benri_aws_query_builder_filter_by_tag "$@")
+echo $_query_str
 }
 
 _benri_aws_query_builder_get_object_from_list_by_key_value () {
@@ -498,16 +512,15 @@ echo "$_query_str"
 }
 
 ###filters
+#BENRI_AWS_TARGET_VPC_IDでvpc絞り込み　暫定でここに仕込む
 
-_benri_aws_query_builder_filter_by_tag () {
-  _benri_aws_query_builder_get_object_from_list_by_tag "$@"
-}
 
 ##for cloudformation
 #論理IDで絞り込み
 _benri_aws_query_builder_filter_by_logical_id () {
   _logical_id="$1"
   _query_str=''$(_benri_aws_query_builder_filter_by_tag 'aws:cloudformation:logical-id' $_logical_id)
+  
   echo "$_query_str"
 }
 #論理IDでセキュリティーグループid取得 
@@ -519,13 +532,7 @@ _benri_aws_query_builder_get_security_group_id_by_logical_id () {
 _benri_aws_get_security_group_id_by_logical_id () {
   _logical_id="$1"
   _query_str=$(_benri_aws_query_builder_get_security_group_id_by_logical_id "$_logical_id")
-  if test -n "$KANAMEI_AWS_PROFILE_NAME"
-    then
-    __profile=" --profile ${KANAMEI_AWS_PROFILE_NAME}"
-  else
-    __profile=''
-  fi
-  aws ec2 describe-security-groups --output text --query "$_query_str" $__profile
+  aws ec2 describe-security-groups --output text --query "$_query_str" 
 }
 #論理IDでセキュリティーグループid取得 
 _benri_aws_query_builder_get_security_owner_id_by_logical_id () {
@@ -536,11 +543,5 @@ _benri_aws_query_builder_get_security_owner_id_by_logical_id () {
 _benri_aws_get_security_owner_id_by_logical_id () {
   _logical_id="$1"
   _query_str=$(_benri_aws_query_builder_get_security_owner_id_by_logical_id "$_logical_id")
-  if test -n "$KANAMEI_AWS_PROFILE_NAME"
-    then
-    __profile=" --profile ${KANAMEI_AWS_PROFILE_NAME}"
-  else
-    __profile=''
-  fi
-  aws ec2 describe-security-groups --output text --query "$_query_str" $__profile
+  aws ec2 describe-security-groups --output text --query "$_query_str" 
 }
