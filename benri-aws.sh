@@ -145,7 +145,23 @@ _benri_aws_find_instances_by_tag () {
   _target="instances"
   _Target="Instances"
   _key_name_for_id="InstanceId"
-  aws ec2  "describe-$_target" --query "*[].$_Target[?Tags[?Key==\`$_tagkey\`]][]|[?Tags[?Value==\`$_tagvalue\`]]|[].$_key_name_for_id"  --output text
+  
+  
+  _query=$(_benri_aws_query_builder_filter_by_tag "$_tagkey" "$_tagvalue")
+  
+  aws ec2  "describe-$_target" --query "*[]|"$(_benri_aws_query_builder_down_one_level)"|$_query|[]."$_key_name_for_id  --output text
+}
+_benri_aws_find_instances_by_name_tag () {
+_tagkey='Name'
+  _tagvalue=$1
+  
+  _target="instances"
+  _Target="Instances"
+  _key_name_for_id="InstanceId"
+  
+  
+_query=$(_benri_aws_query_builder_filter_by_tag "$_tagkey" "$_tagvalue")
+aws ec2  "describe-$_target" --query "*[]|"$(_benri_aws_query_builder_down_one_level)"|$_query|[]."$_key_name_for_id  --output text
 }
 #vpcidからインスタンスを探す
 # _benri_aws_find_instances_by_vpcid () {
@@ -445,6 +461,7 @@ describe-vpn-gateways
 
 #### 部分は今後filterという名前に変えていこうgetはそのまま使える形にしよう！
 _benri_aws_query_builder_filter_base () {
+  _query_str=
   if test -n "$BENRI_AWS_TARGET_VPC_ID"
     then
       _query_str=''$(_benri_aws_query_builder_get_object_from_list_by_vpcid "$BENRI_AWS_TARGET_VPC_ID")'|'
@@ -454,11 +471,18 @@ _benri_aws_query_builder_filter_base () {
 _benri_aws_query_builder_filter_by_tag () {
   _keyname=$1
   _value=$2
+  _query_str=
   _query_str=$(_benri_aws_query_builder_filter_base)"[?Tags[?Key==\`$_keyname\`]][]|[?Tags[?Value==\`$_value\`]]"
   echo $_query_str
 }
 
-
+_benri_aws_query_builder_filter_by_name_tag () {
+  _keyname='Name'
+  _value=$1
+  _query_str=
+  _query_str=$(_benri_aws_query_builder_filter_by_tag "$_keyname" "$_value" )
+  echo $_query_str
+}
 
 
 #１階層下げる
@@ -544,4 +568,18 @@ _benri_aws_get_security_owner_id_by_logical_id () {
   _logical_id="$1"
   _query_str=$(_benri_aws_query_builder_get_security_owner_id_by_logical_id "$_logical_id")
   aws ec2 describe-security-groups --output text --query "$_query_str" 
+}
+#internet gateway id取得
+_benri_aws_get_internet_gateway_id_by_logical_id () {
+  #InternetGateway
+  _logical_id="$1"
+  _query_str='*[]|'$(_benri_aws_query_builder_filter_by_logical_id "$_logical_id")'.InternetGatewayId'
+  aws ec2 describe-internet-gateways  --output text --query "$_query_str" 
+}
+#subnet id取得
+_benri_aws_get_subnet_id_by_logical_id () {
+  #InternetGateway
+  _logical_id="$1"
+  _query_str='*[]|'$(_benri_aws_query_builder_filter_by_logical_id "$_logical_id")'.SubnetId'
+  aws ec2 describe-subnets  --output text --query "$_query_str" 
 }
