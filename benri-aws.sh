@@ -491,6 +491,9 @@ _benri_aws_query_builder_down_one_level () {
   echo "[].*|[]|[]"
   # echo "[].*[?VpcId]|[]|[]" こっちのほうがいいか？
 }
+
+
+
 _benri_aws_query_builder_get_object_by_keyname () {
   ##TODO テストまだ
   _keyname="$1"
@@ -569,6 +572,23 @@ _benri_aws_get_security_owner_id_by_logical_id () {
   _query_str=$(_benri_aws_query_builder_get_security_owner_id_by_logical_id "$_logical_id")
   aws ec2 describe-security-groups --output text --query "$_query_str" 
 }
+#Nameタグでセキュリティーグループid取得
+_benri_aws_query_builder_get_security_group_id_by_name_tag () {
+  __name="$1"
+  __query_str='*[]|'$(_benri_aws_query_builder_filter_by_name_tag  $__name)'.GroupId'
+  echo "$__query_str"
+}
+
+
+_benri_aws_get_security_group_id_by_name_tag () {
+  _name="$1"
+  # _benri_aws_query_builder_filter_by_name_tag
+  _query_str=$(_benri_aws_query_builder_get_security_group_id_by_name_tag "$_name")
+  aws ec2 describe-security-groups --output text --query "$_query_str" 
+}
+
+
+
 #internet gateway id取得
 _benri_aws_get_internet_gateway_id_by_logical_id () {
   #InternetGateway
