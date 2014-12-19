@@ -468,11 +468,18 @@ _benri_aws_query_builder_filter_base () {
   fi
   echo $_query_str
 }
+_benri_aws_query_builder_filter_by_tag_() {
+  _keyname=$1
+  _value=$2
+  _query_str=
+  _query_str="[?Tags[?Key==\`$_keyname\`]][]|[?Tags[?Value==\`$_value\`]]"
+  echo $_query_str
+}
 _benri_aws_query_builder_filter_by_tag () {
   _keyname=$1
   _value=$2
   _query_str=
-  _query_str=$(_benri_aws_query_builder_filter_base)"[?Tags[?Key==\`$_keyname\`]][]|[?Tags[?Value==\`$_value\`]]"
+  _query_str=$(_benri_aws_query_builder_filter_base)""$(_benri_aws_query_builder_filter_by_tag_ "$_keyname" "$_value" )
   echo $_query_str
 }
 
@@ -588,12 +595,31 @@ _benri_aws_get_security_group_id_by_name_tag () {
 }
 
 
-
+_benri_aws_query_builder_filter_internet_gateway_by_logical_id () {
+  _query_vpc=
+  if test -n "$BENRI_AWS_TARGET_VPC_ID"
+    then
+      _query_vpc='[?Attachments[?VpcId==`'"$BENRI_AWS_TARGET_VPC_ID"'`]]|'
+  fi
+  
+  
+  #InternetGatewayはVpcIdの場所が違うので気をつけること _benri_aws_query_builder_filter_by_tag_　をつかう最後のアンスコに注意
+  _logical_id="$1"
+  _query_str="$_query_vpc"$(_benri_aws_query_builder_filter_by_tag_ 'aws:cloudformation:logical-id' "$_logical_id")
+  echo "$_query_str"
+}
 #internet gateway id取得
 _benri_aws_get_internet_gateway_id_by_logical_id () {
-  #InternetGateway
+  _query_vpc=
+  if test -n "$BENRI_AWS_TARGET_VPC_ID"
+    then
+      _query_vpc='[?Attachments[?VpcId==`'"$BENRI_AWS_TARGET_VPC_ID"'`]]|'
+  fi
+  
+  
+  #InternetGatewayはVpcIdの場所が違うので気をつけること _benri_aws_query_builder_filter_by_tag_　をつかう最後のアンスコに注意
   _logical_id="$1"
-  _query_str='*[]|'$(_benri_aws_query_builder_filter_by_logical_id "$_logical_id")'.InternetGatewayId'
+  _query_str='*[]|'$(_benri_aws_query_builder_filter_internet_gateway_by_logical_id "$_logical_id")'.InternetGatewayId'
   aws ec2 describe-internet-gateways  --output text --query "$_query_str" 
 }
 #subnet id取得
